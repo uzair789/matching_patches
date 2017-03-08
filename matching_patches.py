@@ -65,8 +65,8 @@ def generate_XYZcam(rgb,depth,patch_location):#,ply_file):
     right_limit = patch_location[2]
     upper_limit = patch_location[1]
     lower_limit = patch_location[3]
-    height = (lower_limit - upper_limit) + 1 #including the starting element
-    width = (right_limit-left_limit) + 1 #including the starting element
+    height = (lower_limit - upper_limit) #including the starting element
+    width = (right_limit-left_limit) #including the starting element
     print ("Total selected pixels = %d"%(height*width))
 
     XYZ_cam_mat = numpy.zeros([4,width*height]) 
@@ -75,9 +75,9 @@ def generate_XYZcam(rgb,depth,patch_location):#,ply_file):
     count = 0   
     v = upper_limit
     
-    while(v<=lower_limit):
+    while(v<lower_limit):
         u = left_limit
-        while(u<=right_limit):
+        while(u<right_limit):
             #color = rgb.getpixel((u,v))
             Z = depth.getpixel((u,v)) / scalingFactor
             if Z==0:
@@ -94,6 +94,8 @@ def generate_XYZcam(rgb,depth,patch_location):#,ply_file):
         v=v+1#(height-1)
     print "length"
     print len(XYZ_cam)
+    print "count"
+    print count	
     return XYZ_cam_mat[:,0:count] # ignoring the zeros in the matrix because matsize is width*height
 
 
@@ -193,21 +195,23 @@ def generateXYZ_world1(file_rgb1,start_X,start_Y):
     #create patches in the rgb image and also select the corresponding patch in the depth image
     left = start_X#410
     upper = start_Y#275
-    right = left+patchSize_X-1#149
-    lower = upper+patchSize_Y-1#369#325
+    right = left+patchSize_X#149
+    lower = upper+patchSize_Y#369#325
     patch_location = (left,upper,right,lower)
     
     #visualizing the selected pixels in image1
     i=left
-    while(i<=right):
+    while(i<right):
 	j=upper
-	while(j<=lower):
+	while(j<lower):
                 #if(i==left or i == right or j == upper or j == lower):
 		 #  im_rgb_image1[i,j] = (255,0,0)
  		j=j+1
         i=i+1
     #im_rgb1.show()
     patch_rgb = im_rgb1.crop(patch_location)
+    #print "dubugggggggggggg"
+    #print patch_rgb.size		
     #patch_rgb.show()
     
     
@@ -289,26 +293,33 @@ def generateXYZ_cam2(file_rgb2,XYZ_world1):
     right = xyz_c[0,XYZ_im2.shape[1]-1]
     lower = xyz_c[1,XYZ_im2.shape[1]-1]
 
+
+    #print "*********"
+    #print left
+    #print right
+    #print upper
+    #print lower
+
     # doing this to maintain a constant crop size because usually some locations are absent
     mph = int((left+right)/2)
     mpv = int((upper+lower)/2)
     
     if(patchSize_X % 2 == 0):
-	left = mph- (patchSize_X/2 -1 ) #49
-        right = (mph+1) + (patchSize_X/2 -1 ) #49
+	left = mph- (patchSize_X/2 ) #49
+        right = (mph) + (patchSize_X/2  ) #49
     else:
  	left = mph - int(patchSize_X/2)	
-	right = mph + int(patchSize_X/2)
+	right = mph + int(patchSize_X/2) +1
 
     if(patchSize_Y % 2 == 0):
-	upper = mpv - (patchSize_Y/2 -1 )#49
-        lower = (mpv+1) + (patchSize_Y/2 -1 )#49
+	upper = mpv - (patchSize_Y/2 )#49
+        lower = (mpv) + (patchSize_Y/2  )#49
     else:
 	upper = mpv - int(patchSize_Y/2)#49
-        lower = mpv + int(patchSize_Y/2)#49
+        lower = mpv + int(patchSize_Y/2) + 1#49
     
     print 'size crop2'
-    size = (right-left+1)*(lower-upper+1)
+    size = (right-left)*(lower-upper)
     print size
     match_location = (int(left),int(upper),int(right),int(lower))
     print "match location"
@@ -322,6 +333,11 @@ def generateXYZ_cam2(file_rgb2,XYZ_world1):
 
     #im_rgb2.show()
     patch_rgb2 = im_rgb2.crop(match_location)
+
+
+    print "real size crop2"
+    print patch_rgb2.size
+
     #patch_rgb2.show()
     path = 'generated_dataset/'+str(folder)+'/'+ str(folder) + b2[6]
     patch_rgb2.save(path,'PNG')
@@ -332,8 +348,8 @@ def generateXYZ_cam2(file_rgb2,XYZ_world1):
 if __name__ == '__main__':
 
     global dataset_path
-    dataset_path = '/mnt/data/tum_rgbd_slam/'
-    #dataset_path = './'	
+    #dataset_path = '/mnt/data/tum_rgbd_slam/'
+    dataset_path = './mnt/data/tum_rgbd_slam/'	
     
     file_rgb1 = dataset_path+'rgbd_dataset_freiburg2_rpy/rgb/1311867718.641710.png' 
     im_rgb1_vis = Image.open(file_rgb1)
@@ -360,12 +376,12 @@ if __name__ == '__main__':
 	#visualizing the crop on image1
 	left = start_X#410
         upper = start_Y#275
-        right = left+patchSize_X-1#149
-        lower = upper+patchSize_Y-1#369#325
+        right = left+patchSize_X#149
+        lower = upper+patchSize_Y#369#325
 	ii=left
-	while(ii<=right):
+	while(ii<right):
 		jj=upper
-		while(jj<=lower):
+		while(jj<lower):
 		   im_rgb_vis_image1[ii,jj] = (255-2*i,2*i,i)
  		   jj=jj+1
                 ii=ii+1
@@ -396,8 +412,8 @@ if __name__ == '__main__':
 		#print file_rgb2	
 		generateXYZ_cam2(file_rgb2,XYZ_world1)
 	
-	off_x = random.randrange(-50,640-patchSize_X-50)
-    	off_y = random.randrange(-270,480-patchSize_Y-270)
+	off_x = random.randrange(-50-1,640-patchSize_X-50+1)   #-1 and +1 to include the lower and upper bound...range(lower,upper) doesn include lower nad upper
+    	off_y = random.randrange(-270-1,480-patchSize_Y-270+1)
 	folder = folder + 1		
     	
     #im_rgb1_vis.show()
