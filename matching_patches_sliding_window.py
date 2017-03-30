@@ -288,6 +288,7 @@ def generateXYZ_cam2(file_rgb2,XYZ_world1):
 		return
   	else:
 		xyz_c[:,i] = [x_c,y_c]
+
     left = xyz_c[0,0]
     upper = xyz_c[1,0]
     right = xyz_c[0,XYZ_im2.shape[1]-1]
@@ -339,7 +340,7 @@ def generateXYZ_cam2(file_rgb2,XYZ_world1):
     print patch_rgb2.size
 
     #patch_rgb2.show()
-    path = generated_data_path + '/'+ str(folder)+'/'+ str(folder) + b2[6]
+    path = generated_data_path + str(folder)+'/'+ str(folder) + b2[6]
     patch_rgb2.save(path,'PNG')
     f1.write('/mnt/data/uzair/'+path+" "+str(folder)+"\n")
     
@@ -350,10 +351,7 @@ if __name__ == '__main__':
     global dataset_path
     global generated_data_path
 
-    generated_data_path = 'generated_dataset64x64'	
-
-
-
+    generated_data_path = 'generated_dataset100x100_slidingWindow/'	
 
     dataset_path = '/mnt/data/tum_rgbd_slam/'
     #dataset_path = './mnt/data/tum_rgbd_slam/'	
@@ -364,21 +362,23 @@ if __name__ == '__main__':
 
     global patchSize_X
     global patchSize_Y
-    patchSize_X = 64
-    patchSize_Y = 64
+    patchSize_X = 100
+    patchSize_Y = 100
     num_folders = 40	
     off_x = 0
     off_y = 0	     
     global folder
     folder = 1
     global f1
-    f1 = open(generated_data_path+'/dataset.txt','w')	
+    f1 = open(generated_data_path+'dataset.txt','w')	
+    master_loop = True	
 
-    for i in xrange(num_folders):
+    #for i in xrange(num_folders):
+    while(master_loop):	
 	os.mkdir(generated_data_path+str(folder))
 	
-    	start_X = 50 + off_x 
-    	start_Y = 270 + off_y
+    	start_X = off_x 
+    	start_Y = off_y
 
 	#visualizing the crop on image1
 	left = start_X#410
@@ -389,16 +389,17 @@ if __name__ == '__main__':
 	while(ii<right):
 		jj=upper
 		while(jj<lower):
-		   im_rgb_vis_image1[ii,jj] = (255-2*i,2*i,i)
+		   im_rgb_vis_image1[ii,jj] = (255-2*folder,2*folder,folder)
+		   #print('ii = %d, jj = %d , right = %d , lower = %d' %(ii,jj,right,lower))	
  		   jj=jj+1
                 ii=ii+1
       	
-	if (start_X >= 0 and start_X <= 640-patchSize_X and start_Y >= 0 and start_Y <= 480-patchSize_Y):
-        	pass
-	else:
-		print ("Current starting point (x,y) : %d %d "%(startX,startY))
-		print 'change the starting location or patchSize - Pixels are out of bounds'
-		sys.exit()
+	#if (start_X >= 0 and start_X <= 640-patchSize_X and start_Y >= 0 and start_Y <= 480-patchSize_Y):
+        	#pass
+	#else:
+		#print ("Current starting point (x,y) : %d %d "%(startX,startY))
+		#print 'change the starting location or patchSize - Pixels are out of bounds'
+		#sys.exit()
     	
 	XYZ_world1 = generateXYZ_world1(file_rgb1,start_X,start_Y)
 
@@ -410,7 +411,7 @@ if __name__ == '__main__':
 			continue
         	count = count + 1
 		#if count == 2:
-		#	break
+			#break
 
 		print('processing folder % d | count %d | start (%d,%d)'%(folder,count,start_X,start_Y))
 		a = line.split(" ")
@@ -419,12 +420,18 @@ if __name__ == '__main__':
 		#print file_rgb2	
 		generateXYZ_cam2(file_rgb2,XYZ_world1)
 	
-	off_x = random.randrange(-50-1,640-patchSize_X-50+1)   #-1 and +1 to include the lower and upper bound...range(lower,upper) doesn include lower nad upper
-    	off_y = random.randrange(-270-1,480-patchSize_Y-270+1)
-	folder = folder + 1		
+	folder = folder + 1
+	off_x = off_x + patchSize_X-10#random.randrange(-50-1,640-patchSize_X-50+1)   #-1 and +1 to include the lower and upper bound...range(lower,upper) doesn include lower nad upper
+    	if off_x > 640-patchSize_X:
+		off_x = 0
+		off_y = off_y + patchSize_Y-10#random.randrange(-270-1,480-patchSize_Y-270+1)
+		if off_y > 480-patchSize_Y:
+			print('whole image covered!!')
+			master_loop = False
+	 		
     	
     #im_rgb1_vis.show()
-    im_rgb1_vis.save("patches_all.png",'PNG')
+    im_rgb1_vis.save(generated_data_path+"patches_all.png",'PNG')
 
 
 	
