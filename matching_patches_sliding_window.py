@@ -348,10 +348,22 @@ def generateXYZ_cam2(file_rgb2,XYZ_world1):
 
 if __name__ == '__main__':
 
+    parser = argparse.ArgumentParser(description = ' This script generates the synthetic matching and non-matching pairs  ')
+    parser.add_argument('-rP', type = bool, help='if set as :True selects random patches; ',default = False)
+    args = parser.parse_args()
+    randomP = args.rP
+    print randomP
+    if (randomP == True):
+	num_folders = input("please input the number of folders : example 10,20...etc : ")
+	num_folders = int(num_folders)
+	 
+	
+
+
     global dataset_path
     global generated_data_path
 
-    generated_data_path = 'generated_dataset100x100_slidingWindow/'	
+    generated_data_path = 'dummy_test/'#'generated_dataset100x100_slidingWindow/'	
 
     dataset_path = '/mnt/data/tum_rgbd_slam/'
     #dataset_path = './mnt/data/tum_rgbd_slam/'	
@@ -364,7 +376,7 @@ if __name__ == '__main__':
     global patchSize_Y
     patchSize_X = 100
     patchSize_Y = 100
-    num_folders = 40	
+    #num_folders = 40	
     off_x = 0
     off_y = 0	     
     global folder
@@ -410,8 +422,8 @@ if __name__ == '__main__':
 		if line[0] == '#':
 			continue
         	count = count + 1
-		#if count == 2:
-			#break
+		if count == 2:
+			break
 
 		print('processing folder % d | count %d | start (%d,%d)'%(folder,count,start_X,start_Y))
 		a = line.split(" ")
@@ -421,13 +433,23 @@ if __name__ == '__main__':
 		generateXYZ_cam2(file_rgb2,XYZ_world1)
 	
 	folder = folder + 1
-	off_x = off_x + patchSize_X-10#random.randrange(-50-1,640-patchSize_X-50+1)   #-1 and +1 to include the lower and upper bound...range(lower,upper) doesn include lower nad upper
-    	if off_x > 640-patchSize_X:
-		off_x = 0
-		off_y = off_y + patchSize_Y-10#random.randrange(-270-1,480-patchSize_Y-270+1)
-		if off_y > 480-patchSize_Y:
-			print('whole image covered!!')
+
+
+	if (randomP == True):
+		off_x = random.randrange(0,640-patchSize_X+1)   #-1 and +1 to include the lower and upper bound...range(lower,upper) doesn include lower nad upper
+    		off_y = random.randrange(0,480-patchSize_Y+1)
+		if (folder == num_folders + 1):
 			master_loop = False
+
+	#performing full sliding window  
+	if (randomP == False):
+		off_x = off_x + patchSize_X-10#random.randrange(-50-1,640-patchSize_X-50+1)   #-1 and +1 to include the lower and upper bound...range(lower,upper) doesn include lower nad upper
+    		if off_x > 640-patchSize_X:
+			off_x = 0
+			off_y = off_y + patchSize_Y-10#random.randrange(-270-1,480-patchSize_Y-270+1)
+			if off_y > 480-patchSize_Y:
+				print('whole image covered!!')
+				master_loop = False
 	 		
     	
     #im_rgb1_vis.show()
