@@ -347,6 +347,7 @@ def generateXYZ_cam2(file_rgb2,XYZ_world1):
 
 if __name__ == '__main__':
 
+    
     global dataset_path
     global generated_data_path
 
@@ -364,18 +365,18 @@ if __name__ == '__main__':
 
     global patchSize_X
     global patchSize_Y
-    patchSize_X = 64
-    patchSize_Y = 64
+    patchSize_X = 100
+    patchSize_Y = 100
     num_folders = 40	
     off_x = 0
     off_y = 0	     
     global folder
+    global f1  
     folder = 1
-    global f1
     f1 = open(generated_data_path+'/dataset.txt','w')	
 
     for i in xrange(num_folders):
-	os.mkdir(generated_data_path+str(folder))
+	os.mkdir(generated_data_path+'/'+str(folder))
 	
     	start_X = 50 + off_x 
     	start_Y = 270 + off_y
@@ -424,7 +425,7 @@ if __name__ == '__main__':
 	folder = folder + 1		
     	
     #im_rgb1_vis.show()
-    im_rgb1_vis.save("patches_all.png",'PNG')
+    im_rgb1_vis.save(generated_data_path+"patches_all.png",'PNG')
 
 
 	
