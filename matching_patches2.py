@@ -27,8 +27,8 @@ focalLength_Y = 516.5
 centerX = 318.6
 centerY = 255.3
 scalingFactor = 5000.0
-
 """
+
 #freiburg2
 focalLength_X = 520.9
 focalLength_Y = 521.0
@@ -80,8 +80,8 @@ def generate_XYZcam(rgb,depth,patch_location):#,ply_file):
         while(u<right_limit):
             #color = rgb.getpixel((u,v))
             Z = depth.getpixel((u,v)) / scalingFactor
-	    print "ZZZZZZZZZZZZZZZZ"
-	    print Z		
+	    #print "ZZZZZZZZZZZZZZZZ"
+	    #print Z		
             if Z==0:
                 u=u+1
                 continue
@@ -176,6 +176,61 @@ def find_depthMap(rgb_name):
                 
     return None
     	
+def norm_check(image1,image2):
+	"""
+	Computes a check on the ksi norm between the images
+
+	G_w2 = G_w1 * G_12
+	inv(G_w1) * G_w2 = G_12
+	ksi = log(G_12)
+	norm(ksi) --> gives the amount of change between G_w1 and G_w2
+
+	Input :
+		image1 -- name of reference image (format : rgb/'timestamp'.png  (string))
+		image2 -- name of current image (format : rgb/'timestamp'.png  (string)) 
+
+	Output : boolean (True of False)
+		True if (norm > threshold)
+	"""
+	thresh = 0.02
+
+	l1 = find_quaternion(image1)
+	l2 = find_quaternion(image2)
+
+	G_w1 = generate_Transform4x4(l1)
+	G_w2 = generate_Transform4x4(l2)
+
+	inv_G_w1 = numpy.linalg.inv(G_w1)
+
+	G_12 = numpy.dot(inv_G_w1 , G_w2)
+
+	print 'G_w1'
+	print G_w1
+	print 'G_w2'
+	print G_w2
+	print 'inv_G_w1'
+	print inv_G_w1
+	print 'G_12'
+	print G_12
+
+	ksi = numpy.log(G_12)
+
+	print "generated ksi"
+	print ksi
+	#downhat ksi
+
+	nrm = numpy.linalg.norm(ksi,2)
+
+	print "thresh"
+	print thresh
+	print "norm of ksi"
+	print nrm	
+
+	if nrm > thresh:
+		print "Transforamtion too large between frames!!!!"
+		return True
+	else:
+		return False
 
 
 
@@ -213,12 +268,12 @@ def generateXYZ_world1(file_rgb1,start_X,start_Y):
         i=i+1
     #im_rgb1.show()
     patch_rgb = im_rgb1.crop(patch_location)
-    print "dubugggggggggggg"
-    print patch_rgb.size		
+    #print "dubugggggggggggg"
+    #print patch_rgb.size		
     #patch_rgb.show()
-    print im_rgb1
-    print im_depth
-    print patch_location
+    #print im_rgb1
+    #print im_depth
+    #print patch_location
     
     #generate the XYZ cordinates for the Image1
     XYZ_cam1 = generate_XYZcam(im_rgb1,im_depth,patch_location)
@@ -353,6 +408,9 @@ def generateXYZ_cam2(file_rgb2,XYZ_world1):
     return 1
 
 
+
+
+
 #if __name__ == '__main__':
 def matching_patches(dataset_sequence_ip,generated_data_path_ip,num_folders,randomP = True):
     #parser = argparse.ArgumentParser(description = ' This script generates the synthetic matching and non-matching pairs  ')
@@ -438,10 +496,10 @@ def matching_patches(dataset_sequence_ip,generated_data_path_ip,num_folders,rand
 		#print 'change the starting location or patchSize - Pixels are out of bounds'
 		#sys.exit()
     	
-	print "000000000"
-	print file_rgb1
-	print start_X
-	print start_Y
+	#print "000000000"
+	#print file_rgb1
+	#print start_X
+	#print start_Y
 
 	XYZ_world1 = generateXYZ_world1(file_rgb1,start_X,start_Y)
 	if (XYZ_world1 == None): #because of Z being 0
@@ -452,23 +510,28 @@ def matching_patches(dataset_sequence_ip,generated_data_path_ip,num_folders,rand
     	#file_rgb2 = 'rgbd_dataset_freiburg2_rpy/rgb/1311867733.645698.png'
     	count = 0
     	f = open(dataset_path + dataset_sequence + 'rgb.txt')
-	
+	summ = 0
     	for line in f:
 		if line[0] == '#':
 			continue
         	count = count + 1
-		if count == 20:
-			break
+		#if count == 20:
+		#	break
 
 		print('processing folder % d | count %d | start (%d,%d)'%(folder,count,start_X,start_Y))
 		a = line.split(" ")
 		b=a[1].split("\n")
 		file_rgb2 = dataset_path + dataset_sequence + b[0] 	
+
+		##norm check to check if the transformation between the images is greater than a threshold
+		#if (norm_check(image1,b[0]) ):
+		#	break
+		
 		#print file_rgb2	
 		flag = generateXYZ_cam2(file_rgb2,XYZ_world1)
-		
+		summ = summ + flag
 				
-	if (flag >  0):# to prevent empty folders
+	if (summ >  0):# to prevent empty folders
 		folder = folder + 1
 		os.mkdir(generated_data_path+str(folder))
 	
